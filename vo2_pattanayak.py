@@ -22,7 +22,8 @@ class vo2_pattanayak:
         self.c_f = c_f
         self.V_ce = 0
 
-
+    def set_Time(self, start, end, steps):
+        self.t = np.linspace(start,end,steps)
     def set_biased(self, V_s):
         self.V_s = V_s
         if self.V_s >= 23.81:
@@ -30,26 +31,40 @@ class vo2_pattanayak:
         else:
             self.UorD = True
 
-    def R_D(self, V_ce):
+    def b(self, V_ce):
+
         V_D = self.V_s - V_ce
         if V_D > 23.81:
             self.UorD = False
-            return 50
-        elif V_D < 23.81 and not UorD:
-            return 2100
-        elif V_D > 8.06 and UorD:
-            return 50
+            return 1
+        elif V_D > 8.06 and V_D < 23.81 and not UorD:
+            return 1
+        elif V_D > 8.06 and V_D < 23.81 and UorD:
+            return -1
         elif V_D < 8.06:
             self.UorD = True
+            return -1
+        else:
+            return 0
+
+    def R_D(self, V_ce):
+        V_D = self.V_s - V_ce
+        if V_D > 23.81:
             return 2100
+        elif V_D > 8.06 and V_D < 23.81 and not self.UorD:
+            return 50
+        elif V_D > 8.06 and V_D < 23.81 and self.UorD:
+            return 2100
+        elif V_D < 8.06:
+            return 50
         else:
             return -1
 
-    def dV_ce_dt(self, V_ce, t, R_D):
-        return -(self.R_e+R_D(V_ce))/(self.C_e*R_D(V_ce)*self.R_e)*V_ce + self.V_s/(self.C_e*R_D(V_ce))
+    def dV_ce_dt(self, V_ce, t, R_D, b):
+        return b(V_ce)*(self.R_e+R_D(V_ce))/(self.C_e*R_D(V_ce)*self.R_e)*V_ce + self.V_s/(self.C_e*R_D(V_ce))
 
     def solve(self):
-        self.V_ce = inte.odeint(self.dV_ce_dt, 0, self.t, args=(self.R_D, ))
+        self.V_ce = inte.odeint(self.dV_ce_dt, 0, self.t, args=(self.R_D, self.b))
 
     def setTime(self, T, steps):
         self.t = np.linspace(0, T, steps)
