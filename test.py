@@ -3,7 +3,7 @@ import scipy.misc as misc
 import numpy as np
 import matplotlib.pyplot as plt
 
-V_s = 20
+V_s = 25
 
 
 UorD = True
